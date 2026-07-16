@@ -9,72 +9,73 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Case Log">
-<meta name="theme-color" content="#1f6f57">
+<meta name="theme-color" content="#18263a">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--green:#1f6f57;--green-lt:#e7f2ee;--ink:#20262b;--mut:#6b7680;--line:#dde3e8;--amber:#b26a00;--amber-lt:#fdf3e3;--bg:#f6f8f9}
+:root{--navy:#1e4d8c;--navy-dk:#18263a;--accent:#7aa5e6;--ink:#e8eef6;--mut:#93a5bc;--line:#2b3e5a;--amber:#f2b45c;--amber-lt:#3a2f18;--bg:#0f1a2b;--card:#16233a;--card2:#1c2d4a;--good:#5fd3a0;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:15px}
-header{background:var(--green);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+body{margin:0;font-family:"Aptos",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:15px}
+header{background:var(--navy-dk);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 header h1{font-size:17px;margin:0;font-weight:600}
-header .sub{font-size:12px;opacity:.85}
-nav{display:flex;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header .sub{font-size:12px;opacity:.75}
+nav{display:flex;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 nav button{flex:1;padding:11px 4px;border:none;background:none;font-size:14px;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent;font-weight:600}
-nav button.on{color:var(--green);border-bottom-color:var(--green)}
+nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
 main{max-width:880px;margin:0 auto;padding:14px}
-.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
 label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin:10px 0 3px}
-input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;font-size:16px;background:#fff;color:var(--ink)}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:16px;background:var(--card2);color:var(--ink)}
 textarea{resize:vertical;min-height:44px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 @media(max-width:560px){.grid{grid-template-columns:1fr}}
-.btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer}
-.btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
-.btn.warn{background:#a33}
+.btn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--accent);border:1.5px solid var(--navy)}
+.btn.warn{background:#b04a4a}
 .btn.sm{padding:5px 10px;font-size:13px;border-radius:6px}
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
 .chip.pending{background:var(--amber-lt);color:var(--amber)}
-.chip.entered{background:var(--green-lt);color:var(--green)}
-#shortIn{font-size:17px;padding:12px;border:2px solid var(--green);border-radius:9px}
+.chip.entered{background:#14352a;color:var(--good)}
+#shortIn{font-size:17px;padding:12px;border:2px solid var(--navy);border-radius:10px;background:var(--card2)}
 #parseHint{font-size:12px;color:var(--mut);margin-top:6px;line-height:1.5}
-#parsePrev{margin-top:8px;font-size:13px;background:var(--green-lt);border-radius:7px;padding:8px 10px;display:none}
+#parsePrev{margin-top:8px;font-size:13px;background:rgba(122,165,230,.12);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
-.row:hover{background:var(--bg)}
+.row:hover{background:var(--card2)}
 .row .l{min-width:0}.row .t{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .s{font-size:12px;color:var(--mut)}
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .filters input,.filters select{width:auto;flex:1;min-width:110px}
-.pcard{border:2px solid var(--green);border-radius:12px;background:#fff;padding:16px}
-.pcard h3{margin:0 0 2px;color:var(--green);font-size:14px;text-transform:uppercase;letter-spacing:.4px}
+.pcard{border:2px solid var(--navy);border-radius:14px;background:var(--card);padding:16px}
+.pcard h3{margin:0 0 2px;color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:.4px}
 .pcard h2{margin:0 0 10px;font-size:20px}
 .pf{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:16px}
 .pf .k{color:var(--mut);font-size:13px;font-weight:600;padding-top:2px;white-space:nowrap}
 .pf .v{font-weight:600;text-align:right}
-.pf .v.empty{color:#bbb;font-weight:400}
+.pf .v.empty{color:#4d617e;font-weight:400}
 .qnav{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .qnav .btn{flex:1;min-width:100px}
 .bar{background:var(--line);border-radius:6px;height:12px;overflow:hidden;margin-top:4px}
-.bar>div{height:100%;background:var(--green);border-radius:6px}
+.bar>div{height:100%;background:var(--navy);border-radius:6px}
 .bar>div.done{background:#2e9e6b}
 .req{margin-bottom:14px}
 .req .hd{display:flex;justify-content:space-between;font-size:14px;font-weight:600}
 .req .hd .n{color:var(--mut);font-weight:700}
 .note{font-size:12px;color:var(--mut);line-height:1.55}
-details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--green);font-size:14px;padding:4px 0}
+details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14px;padding:4px 0}
 .exp{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.raw{font-size:12px;color:var(--mut);background:var(--bg);border-radius:6px;padding:6px 8px;margin-top:8px;font-family:ui-monospace,monospace}
-.count-pill{background:#fff2;color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700}
-.ok{color:var(--green);font-weight:700}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:9px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.raw{font-size:12px;color:var(--mut);background:#0c1522;border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin-top:8px;font-family:ui-monospace,monospace}
+.count-pill{background:rgba(255,255,255,.14);color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700}
+.ok{color:var(--good);font-weight:700}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243a5e;color:#fff;border:1px solid var(--line);padding:10px 18px;border-radius:9px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
 .toast.show{opacity:1}
 .cbrow{display:flex;gap:14px;flex-wrap:wrap;padding:6px 0}
 .cbrow label{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);font-weight:400;margin:0}
-.cbrow input{width:auto}
+.cbrow input{width:auto;accent-color:var(--navy)}
+a{color:var(--accent)}
 </style>
 </head>
 <body>
 <header>
-  <h1>Fellowship Case Logger</h1>
+  <img src="icon-192.png" alt="" style="width:30px;height:30px;border-radius:7px"><h1>Fellowship Case Logger</h1>
   <span class="count-pill" id="hdrCount"></span>
   <span class="sub">shorthand in &rarr; portal fields out</span>
 </header>
@@ -92,7 +93,7 @@ details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--green)
     <label style="margin-top:0">Quick entry — type it like your Word doc</label>
     <input id="shortIn" placeholder="e.g.  ddkt ANDT292 54M left dbd +bt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <div id="parsePrev"></div>
-    <div id="parseHint"><b>Shorthand:</b> ddlt · ldlt · ddkt · ldkt · spk · slk · panctx · dbd/dcd (procurement) · ldn · ldh · bb liver / bb kidney · biliary · hepmaj / hepmin · whip &nbsp;|&nbsp; <b>modifiers:</b> 54M · left/right · robot/lap · nmp · nrp · scs · d2d/rny · split · redo · part (participant) · +bt (adds back bench) · 7/14 (date, else today)</div>
+    <div id="parseHint"><b>Shorthand:</b> ddlt · ldlt · ddkt · ldkt · spk · slk · panctx · dbd/dcd (procurement) · ldn · ldh · bb liver / bb kidney · biliary · hepmaj / hepmin · whip &nbsp;|&nbsp; <b>modifiers:</b> 54M · left/right · robot/lap · nmp · nrp · tanrp · scs · d2d/rny · split · redo · part (participant) · +bt (adds back bench) · 7/14 (date, else today)</div>
   </div>
   <div class="card">
     <div class="grid">
@@ -150,7 +151,7 @@ details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--green)
 'use strict';
 const SEED=[];
 const KEY='fellowship_caselog_v1';
-const COLS=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight','Procedure','Donor Type','Donation Status','Graft Type - For kidney','Graft Type - For liver','Organ(s) Procured','Technique','BD reconstruction','Machine Perfusion Checkbox','NRP checkbox','Laterality','Laterality - LDN','Hepatectomy Major','Hepatectomy Minor','Pancreas Operation','Bile Duct Operation','Other Operation Description','Comments'];
+const COLS=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight','Procedure','Donor Type','Donation Status','Graft Type - For kidney','Graft Type - For liver','Organ(s) Procured','Technique','BD reconstruction','Machine Perfusion Checkbox','NRP checkbox','NMP','NRP','TA-NRP','Laterality','Laterality - LDN','Hepatectomy Major','Hepatectomy Minor','Pancreas Operation','Bile Duct Operation','Other Operation Description','Comments'];
 
 const CATEGORY={
  'Intestine transplant':'Transplant','Kidney transplant':'Transplant','Liver transplant':'Transplant',
@@ -179,8 +180,8 @@ const ORGANS=['Liver – whole','Liver – in situ split','Kidney','Intestine','
 
 // which extra fields each procedure shows (in portal-entry order)
 const FIELDMAP={
- 'Liver transplant':['Donor Type','Graft Type - For liver','BD reconstruction','Technique','Machine Perfusion Checkbox'],
- 'Kidney transplant':['Donor Type','Donation Status','Graft Type - For kidney','Laterality','Technique','Machine Perfusion Checkbox'],
+ 'Liver transplant':['Donor Type','Graft Type - For liver','BD reconstruction','Technique'],
+ 'Kidney transplant':['Donor Type','Donation Status','Graft Type - For kidney','Laterality','Technique'],
  'Simultaneous liver and kidney transplant':['Donor Type','Donation Status','Graft Type - For liver','BD reconstruction','Laterality','Technique'],
  'Simultaneous pancreas and kidney transplant':['Donor Type','Donation Status','Laterality','Technique'],
  'Pancreas transplant':['Donor Type','Donation Status','Technique'],
@@ -224,6 +225,12 @@ function renderCond(vals){
   }else if(f==='Machine Perfusion Checkbox'||f==='NRP checkbox'){
    const lab=f==='NRP checkbox'?'NRP':'Machine Perfusion';
    h+=`<div class="cbrow" style="align-self:end"><label><input type="checkbox" id="f_${cssId(f)}" ${vals[f]?'checked':''}>${lab}</label></div>`;
+  }else if(f==='Technique'){
+   h+=`<div><label>Technique</label><select id="f_Technique"><option value=""></option>`+
+      OPTS[f].map(o=>`<option ${vals[f]===o?'selected':''}>${o}</option>`).join('')+`</select>
+      <div class="cbrow"><label><input type="checkbox" id="f_NMP" ${vals['NMP']?'checked':''}>NMP</label>
+      <label><input type="checkbox" id="f_NRP" ${vals['NRP']?'checked':''}>NRP</label>
+      <label><input type="checkbox" id="f_TA_NRP" ${vals['TA-NRP']?'checked':''}>TA-NRP</label></div></div>`;
   }else if(f==='Other Operation Description'){
    h+=`</div><label>Other Operation Description</label><input id="f_${cssId(f)}" value="${esc(vals[f]||'')}"><div class="grid">`;
   }else{
@@ -264,6 +271,12 @@ function collectForm(){
   if(f==='ORGANS'){c['Organ(s) Procured']=[...document.querySelectorAll('.org:checked')].map(x=>x.value).join(', ');}
   else c[f]=getVal(f);
  });
+ if((FIELDMAP[c['Procedure']]||[]).includes('Technique')){
+  const g=id=>{const e=document.getElementById(id);return e&&e.checked;};
+  c['NMP']=g('f_NMP')?'NMP':'';c['NRP']=g('f_NRP')?'NRP':'';c['TA-NRP']=g('f_TA_NRP')?'TA-NRP':'';
+  if(c['NMP']&&!c['Machine Perfusion Checkbox'])c['Machine Perfusion Checkbox']='Machine Perfusion';
+  if((c['NRP']||c['TA-NRP'])&&!c['NRP checkbox'])c['NRP checkbox']='NRP';
+ }
  return c;
 }
 function saveCase(){
@@ -305,6 +318,9 @@ function parseShort(txt){
  const mp=/ nmp | organox | mp /.test(t)?'Machine Perfusion':'';
  const nrp=/ nrp /.test(t)?'NRP':'';
  const dstat=/ dcd /.test(t)?'DCD':(/ dbd /.test(t)?'DBD':'');
+ if(/ ta-?nrp /.test(t))c['TA-NRP']='TA-NRP';
+ else if(/ nrp /.test(t))c['NRP']='NRP';
+ if(/ nmp | organox /.test(t))c['NMP']='NMP';
  if(has('part')||has('participant'))c['Role']='Participant';
  pendingBT=/ ?\+ ?bt | \+ ?backtable |backtable|back table/.test(t)&&!/^\s*bb /.test(t.trim());
 
@@ -351,7 +367,7 @@ function renderQueue(){
  if(qIdx>=q.length)qIdx=q.length-1;if(qIdx<0)qIdx=0;
  const c=q[qIdx];
  const fields=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight'];
- const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:[f]);
+ const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:f==='Technique'?['Technique','NMP','NRP','TA-NRP']:[f]);
  const all=[...fields,...extra,'Comments'];
  box.innerHTML=`<div class="pcard">
   <h3>${CATEGORY[c['Procedure']]||'Other'} &rsaquo; portal entry ${qIdx+1} of ${q.length}</h3>
@@ -365,7 +381,7 @@ function renderQueue(){
    <button class="btn sec" onclick="qIdx++;renderQueue()" ${qIdx>=q.length-1?'disabled':''}>Next &rarr;</button>
   </div>
   <div class="qnav"><button class="btn sec sm" onclick="editCase(${c.id})">Edit</button>
-  <button class="btn sec sm warn" style="border-color:#a33;color:#a33;background:#fff" onclick="delCase(${c.id})">Delete</button></div>
+  <button class="btn sec sm warn" style="border-color:#c96a6a;color:#c96a6a;background:transparent" onclick="delCase(${c.id})">Delete</button></div>
  </div>`;
 }
 
