@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case Log</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Case Log">
+<meta name="theme-color" content="#1f6f57">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--green:#1f6f57;--green-lt:#e7f2ee;--ink:#20262b;--mut:#6b7680;--line:#dde3e8;--amber:#b26a00;--amber-lt:#fdf3e3;--bg:#f6f8f9}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:15px}
+header{background:var(--green);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:600}
+header .sub{font-size:12px;opacity:.85}
+nav{display:flex;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{flex:1;padding:11px 4px;border:none;background:none;font-size:14px;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent;font-weight:600}
+nav button.on{color:var(--green);border-bottom-color:var(--green)}
+main{max-width:880px;margin:0 auto;padding:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin:10px 0 3px}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;font-size:16px;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:44px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer}
+.btn.sec{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+.btn.warn{background:#a33}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:6px}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.chip.pending{background:var(--amber-lt);color:var(--amber)}
+.chip.entered{background:var(--green-lt);color:var(--green)}
+#shortIn{font-size:17px;padding:12px;border:2px solid var(--green);border-radius:9px}
+#parseHint{font-size:12px;color:var(--mut);margin-top:6px;line-height:1.5}
+#parsePrev{margin-top:8px;font-size:13px;background:var(--green-lt);border-radius:7px;padding:8px 10px;display:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.row:hover{background:var(--bg)}
+.row .l{min-width:0}.row .t{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:12px;color:var(--mut)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.filters input,.filters select{width:auto;flex:1;min-width:110px}
+.pcard{border:2px solid var(--green);border-radius:12px;background:#fff;padding:16px}
+.pcard h3{margin:0 0 2px;color:var(--green);font-size:14px;text-transform:uppercase;letter-spacing:.4px}
+.pcard h2{margin:0 0 10px;font-size:20px}
+.pf{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:16px}
+.pf .k{color:var(--mut);font-size:13px;font-weight:600;padding-top:2px;white-space:nowrap}
+.pf .v{font-weight:600;text-align:right}
+.pf .v.empty{color:#bbb;font-weight:400}
+.qnav{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.qnav .btn{flex:1;min-width:100px}
+.bar{background:var(--line);border-radius:6px;height:12px;overflow:hidden;margin-top:4px}
+.bar>div{height:100%;background:var(--green);border-radius:6px}
+.bar>div.done{background:#2e9e6b}
+.req{margin-bottom:14px}
+.req .hd{display:flex;justify-content:space-between;font-size:14px;font-weight:600}
+.req .hd .n{color:var(--mut);font-weight:700}
+.note{font-size:12px;color:var(--mut);line-height:1.55}
+details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--green);font-size:14px;padding:4px 0}
+.exp{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.raw{font-size:12px;color:var(--mut);background:var(--bg);border-radius:6px;padding:6px 8px;margin-top:8px;font-family:ui-monospace,monospace}
+.count-pill{background:#fff2;color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700}
+.ok{color:var(--green);font-weight:700}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:9px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+.cbrow{display:flex;gap:14px;flex-wrap:wrap;padding:6px 0}
+.cbrow label{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);font-weight:400;margin:0}
+.cbrow input{width:auto}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fellowship Case Logger</h1>
+  <span class="count-pill" id="hdrCount"></span>
+  <span class="sub">shorthand in &rarr; portal fields out</span>
+</header>
+<nav>
+  <button id="nav-log" class="on" onclick="tab('log')">+ Log</button>
+  <button id="nav-queue" onclick="tab('queue')">Portal Queue</button>
+  <button id="nav-cases" onclick="tab('cases')">All Cases</button>
+  <button id="nav-prog" onclick="tab('prog')">Progress</button>
+</nav>
+<main>
+
+<!-- LOG -->
+<section id="tab-log">
+  <div class="card">
+    <label style="margin-top:0">Quick entry — type it like your Word doc</label>
+    <input id="shortIn" placeholder="e.g.  ddkt ANDT292 54M left dbd +bt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div id="parsePrev"></div>
+    <div id="parseHint"><b>Shorthand:</b> ddlt · ldlt · ddkt · ldkt · spk · slk · panctx · dbd/dcd (procurement) · ldn · ldh · bb liver / bb kidney · biliary · hepmaj / hepmin · whip &nbsp;|&nbsp; <b>modifiers:</b> 54M · left/right · robot/lap · nmp · nrp · scs · d2d/rny · split · redo · part (participant) · +bt (adds back bench) · 7/14 (date, else today)</div>
+  </div>
+  <div class="card">
+    <div class="grid">
+      <div><label>Surgery Date</label><input type="date" id="f_date"></div>
+      <div><label>Patient Initials / UNOS ID</label><input id="f_unos" autocapitalize="characters"></div>
+      <div><label>Patient Age</label><input id="f_age" inputmode="numeric"></div>
+      <div><label>Role</label><select id="f_role"><option>Principal</option><option>Participant</option></select></div>
+      <div><label>Procedure</label><select id="f_proc"></select></div>
+      <div><label>Weight</label><select id="f_weight"><option value=""></option><option>More than 25 kg</option><option>Less than 25 kg</option></select></div>
+    </div>
+    <div id="condFields"></div>
+    <label>Comments</label><textarea id="f_comments"></textarea>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn" onclick="saveCase()">Save case</button>
+      <button class="btn sec" onclick="resetForm()">Clear</button>
+      <span id="editBadge" style="display:none;align-self:center;font-size:13px;color:var(--amber);font-weight:600">editing existing case</span>
+    </div>
+  </div>
+</section>
+
+<!-- QUEUE -->
+<section id="tab-queue" style="display:none">
+  <div class="note" style="margin-bottom:10px">Cases not yet in the TAC portal, oldest first. Open the portal next to this card, copy the fields top-to-bottom, then <b>Mark entered</b> to advance.</div>
+  <div id="queueBox"></div>
+</section>
+
+<!-- CASES -->
+<section id="tab-cases">
+  <div class="card">
+    <div class="filters">
+      <input id="q" placeholder="search UNOS / procedure…" oninput="renderCases()">
+      <select id="fStatus" onchange="renderCases()"><option value="">all statuses</option><option value="pending">pending</option><option value="entered">entered</option></select>
+      <select id="fProc" onchange="renderCases()"><option value="">all procedures</option></select>
+    </div>
+    <div id="caseList"></div>
+    <div class="exp">
+      <button class="btn sec sm" onclick="exportCSV(false)">Export all (CSV)</button>
+      <button class="btn sec sm" onclick="exportCSV(true)">Export pending (CSV)</button>
+      <button class="btn sec sm" onclick="exportJSON()">Backup (JSON)</button>
+      <label class="btn sec sm" style="width:auto;display:inline-block">Restore JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<section id="tab-prog" style="display:none">
+  <div class="card" id="progBox"></div>
+  <div class="card note" id="progNotes"></div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const SEED=[];
+const KEY='fellowship_caselog_v1';
+const COLS=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight','Procedure','Donor Type','Donation Status','Graft Type - For kidney','Graft Type - For liver','Organ(s) Procured','Technique','BD reconstruction','Machine Perfusion Checkbox','NRP checkbox','Laterality','Laterality - LDN','Hepatectomy Major','Hepatectomy Minor','Pancreas Operation','Bile Duct Operation','Other Operation Description','Comments'];
+
+const CATEGORY={
+ 'Intestine transplant':'Transplant','Kidney transplant':'Transplant','Liver transplant':'Transplant',
+ 'Pancreas transplant':'Transplant','Simultaneous liver and kidney transplant':'Transplant',
+ 'Simultaneous pancreas and kidney transplant':'Transplant',
+ 'Deceased donor procurement, with in situ split liver':'Donor','Deceased donor procurement, with pancreas':'Donor',
+ 'Deceased donor procurement, without pancreas':'Donor','Living Donor Hepatectomy':'Donor','Living Donor Nephrectomy':'Donor',
+ 'Intestine Back Bench':'Back Bench','Kidney Back Bench':'Back Bench','Liver Back Bench':'Back Bench','Pancreas Back Bench':'Back Bench',
+ 'Biliary':'HPB','Hepatectomy Major':'HPB','Hepatectomy Minor':'HPB','Pancreas, Non-Transplant':'HPB','Other':'Other'};
+
+const OPTS={
+ 'Donor Type':['Deceased Donor','Living Donor'],
+ 'Donation Status':['DBD','DCD'],
+ 'Graft Type - For kidney':['Single','Dual','En bloc'],
+ 'Graft Type - For liver':['Whole','Right','Left','Left lateral','Extended right'],
+ 'Technique':['Open','Robotic','Laparoscopic','Laparoscopic hand-assisted'],
+ 'BD reconstruction':['Duct-to-duct','Roux-en-y hepaticojejunostomy'],
+ 'Laterality':['Left','Right'],
+ 'Laterality - LDN':['Left','Right'],
+ 'Hepatectomy Major':['Hemi-hepatectomy','Trisectionectomy','Central hepatectomy','Right posterior sectionectomy','Right anterior sectionectomy'],
+ 'Hepatectomy Minor':['Resection of 1 or 2 segments','Partial, or non-anatomic resection','Unroofing of large or multiple hepatic cysts','Other minor hepatic procedure'],
+ 'Bile Duct Operation':['Biliary reconstruction','Ampullary or bile duct resection','Transduodenal sphincteroplasty','Radical cholecystectomy','Common bile duct exploration'],
+ 'Pancreas Operation':['Pancreaticoduodenectomy','Pancreatic resection (distal, Appleby, central)','Pancreatic tumor enucleation','Pancreatic anastomosis','Pancreatic drainage procedure','Pancreatic debridement or necrosectomy']};
+
+const ORGANS=['Liver – whole','Liver – in situ split','Kidney','Intestine','Multi-visceral, en bloc','Pancreas'];
+
+// which extra fields each procedure shows (in portal-entry order)
+const FIELDMAP={
+ 'Liver transplant':['Donor Type','Graft Type - For liver','BD reconstruction','Technique','Machine Perfusion Checkbox'],
+ 'Kidney transplant':['Donor Type','Donation Status','Graft Type - For kidney','Laterality','Technique','Machine Perfusion Checkbox'],
+ 'Simultaneous liver and kidney transplant':['Donor Type','Donation Status','Graft Type - For liver','BD reconstruction','Laterality','Technique'],
+ 'Simultaneous pancreas and kidney transplant':['Donor Type','Donation Status','Laterality','Technique'],
+ 'Pancreas transplant':['Donor Type','Donation Status','Technique'],
+ 'Intestine transplant':['Donor Type','Donation Status','Technique'],
+ 'Deceased donor procurement, without pancreas':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
+ 'Deceased donor procurement, with pancreas':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
+ 'Deceased donor procurement, with in situ split liver':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
+ 'Living Donor Hepatectomy':['Graft Type - For liver','Technique'],
+ 'Living Donor Nephrectomy':['Laterality - LDN','Technique'],
+ 'Liver Back Bench':[],'Kidney Back Bench':[],'Pancreas Back Bench':[],'Intestine Back Bench':[],
+ 'Hepatectomy Major':['Hepatectomy Major','Technique'],
+ 'Hepatectomy Minor':['Hepatectomy Minor','Technique'],
+ 'Biliary':['Bile Duct Operation','Technique'],
+ 'Pancreas, Non-Transplant':['Pancreas Operation','Technique'],
+ 'Other':['Other Operation Description','Technique']};
+
+let DB=[], editId=null;
+function load(){try{const s=localStorage.getItem(KEY); DB=s?JSON.parse(s):structuredClone(SEED);}catch(e){DB=structuredClone(SEED);} if(!localStorage.getItem(KEY))persist();}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+function nextId(){return DB.reduce((m,c)=>Math.max(m,c.id||0),0)+1;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+function dParse(s){const m=(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?new Date(+m[3],+m[1]-1,+m[2]):new Date(0);}
+function iso2us(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${+m}/${+d}/${y}`;}
+function us2iso(us){const m=(us||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`:'';}
+
+/* ---------- form ---------- */
+function buildProcSelect(){
+ const sel=document.getElementById('f_proc');const cats={};
+ Object.entries(CATEGORY).forEach(([p,c])=>{(cats[c]=cats[c]||[]).push(p);});
+ sel.innerHTML=['Transplant','Donor','Back Bench','HPB','Other'].map(c=>
+  `<optgroup label="${c}">`+cats[c].map(p=>`<option>${p}</option>`).join('')+`</optgroup>`).join('');
+ sel.onchange=()=>renderCond({});
+}
+function renderCond(vals){
+ const proc=document.getElementById('f_proc').value;
+ const box=document.getElementById('condFields');let h='<div class="grid">';
+ (FIELDMAP[proc]||[]).forEach(f=>{
+  if(f==='ORGANS'){
+   h+='</div><label>Organ(s) Procured</label><div class="cbrow">'+ORGANS.map(o=>
+    `<label><input type="checkbox" class="org" value="${o}" ${(vals['Organ(s) Procured']||'').includes(o)?'checked':''}>${o}</label>`).join('')+'</div><div class="grid">';
+  }else if(f==='Machine Perfusion Checkbox'||f==='NRP checkbox'){
+   const lab=f==='NRP checkbox'?'NRP':'Machine Perfusion';
+   h+=`<div class="cbrow" style="align-self:end"><label><input type="checkbox" id="f_${cssId(f)}" ${vals[f]?'checked':''}>${lab}</label></div>`;
+  }else if(f==='Other Operation Description'){
+   h+=`</div><label>Other Operation Description</label><input id="f_${cssId(f)}" value="${esc(vals[f]||'')}"><div class="grid">`;
+  }else{
+   h+=`<div><label>${f}</label><select id="f_${cssId(f)}"><option value=""></option>`+
+      OPTS[f].map(o=>`<option ${vals[f]===o?'selected':''}>${o}</option>`).join('')+`</select></div>`;
+  }
+ });
+ box.innerHTML=h+'</div>';
+}
+function cssId(f){return f.replace(/[^a-z0-9]/gi,'_');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function getVal(f){const el=document.getElementById('f_'+cssId(f));if(!el)return'';
+ if(el.type==='checkbox')return el.checked?(f==='NRP checkbox'?'NRP':'Machine Perfusion'):'';return el.value.trim();}
+
+function fillForm(c){
+ document.getElementById('f_date').value=us2iso(c['Surgery Date'])||new Date().toISOString().slice(0,10);
+ document.getElementById('f_unos').value=c['Patient Initials/UNOS ID']||'';
+ document.getElementById('f_age').value=c['Patient Age']||'';
+ document.getElementById('f_role').value=c['Role']||'Principal';
+ document.getElementById('f_proc').value=c['Procedure']||'Liver transplant';
+ document.getElementById('f_weight').value=c['Weight']||'';
+ document.getElementById('f_comments').value=c['Comments']||'';
+ renderCond(c);
+}
+function resetForm(){editId=null;document.getElementById('editBadge').style.display='none';
+ document.getElementById('shortIn').value='';document.getElementById('parsePrev').style.display='none';
+ fillForm({'Procedure':'Liver transplant','Weight':'More than 25 kg'});}
+function collectForm(){
+ const c={};COLS.forEach(k=>c[k]='');
+ c['Surgery Date']=iso2us(document.getElementById('f_date').value);
+ c['Patient Initials/UNOS ID']=document.getElementById('f_unos').value.trim().toUpperCase();
+ c['Patient Age']=document.getElementById('f_age').value.trim();
+ c['Role']=document.getElementById('f_role').value;
+ c['Procedure']=document.getElementById('f_proc').value;
+ c['Weight']=document.getElementById('f_weight').value;
+ c['Comments']=document.getElementById('f_comments').value.trim();
+ (FIELDMAP[c['Procedure']]||[]).forEach(f=>{
+  if(f==='ORGANS'){c['Organ(s) Procured']=[...document.querySelectorAll('.org:checked')].map(x=>x.value).join(', ');}
+  else c[f]=getVal(f);
+ });
+ return c;
+}
+function saveCase(){
+ const c=collectForm();
+ if(!c['Surgery Date']){toast('Set a surgery date');return;}
+ if(editId!=null){const i=DB.findIndex(x=>x.id===editId);c.id=editId;c.status=DB[i].status;if(DB[i]._raw)c._raw=DB[i]._raw;DB[i]=c;toast('Case updated');}
+ else{c.id=nextId();c.status='pending';DB.push(c);
+  if(pendingBT){const b={};COLS.forEach(k=>b[k]='');
+   b['Surgery Date']=c['Surgery Date'];b['Patient Initials/UNOS ID']=c['Patient Initials/UNOS ID'];
+   b['Patient Age']=c['Patient Age'];b['Role']='Principal';
+   b['Procedure']=/kidney/i.test(c['Procedure'])?'Kidney Back Bench':'Liver Back Bench';
+   b.id=nextId();b.status='pending';DB.push(b);toast('Saved + back bench added');}
+  else toast('Case saved');}
+ persist();pendingBT=false;resetForm();refresh();
+}
+function editCase(id){const c=DB.find(x=>x.id===id);if(!c)return;editId=id;
+ document.getElementById('editBadge').style.display='inline';fillForm(c);tab('log');window.scrollTo(0,0);}
+function delCase(id){if(!confirm('Delete this case?'))return;DB=DB.filter(x=>x.id!==id);persist();refresh();}
+function setStatus(id,s){const c=DB.find(x=>x.id===id);if(c){c.status=s;persist();refresh();}}
+
+/* ---------- shorthand parser ---------- */
+let pendingBT=false;
+function parseShort(txt){
+ const t=' '+txt.toLowerCase().trim()+' ';if(!txt.trim())return null;
+ const c={'Procedure':'','Role':'Principal','Technique':'Open'};
+ const today=new Date();
+ const dm=t.match(/ (\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))? /);
+ let y=today.getFullYear();
+ if(dm){if(dm[3])y=dm[3].length===2?2000+ +dm[3]:+dm[3];
+  else{const cand=new Date(y,+dm[1]-1,+dm[2]);if(cand>today)y--;}
+  c['Surgery Date']=`${+dm[1]}/${+dm[2]}/${y}`;}
+ else c['Surgery Date']=`${today.getMonth()+1}/${today.getDate()}/${y}`;
+ const um=txt.match(/\b([A-Za-z]{2}[A-Za-z0-9]{3,6}\d)\b/)||txt.match(/\b(A[MN][A-Z0-9]{2,6})\b/i);
+ if(um)c['Patient Initials/UNOS ID']=um[1].toUpperCase();
+ const am=t.match(/ (\d{1,3})\s*([mf]) /);if(am)c['Patient Age']=am[1];
+ const has=w=>t.includes(' '+w+' ')||t.includes(' '+w+',');
+ const lat=has('left')?'Left':has('right')?'Right':'';
+ if(/robot/.test(t))c['Technique']='Robotic';else if(has('lap'))c['Technique']='Laparoscopic';
+ const mp=/ nmp | organox | mp /.test(t)?'Machine Perfusion':'';
+ const nrp=/ nrp /.test(t)?'NRP':'';
+ const dstat=/ dcd /.test(t)?'DCD':(/ dbd /.test(t)?'DBD':'');
+ if(has('part')||has('participant'))c['Role']='Participant';
+ pendingBT=/ ?\+ ?bt | \+ ?backtable |backtable|back table/.test(t)&&!/^\s*bb /.test(t.trim());
+
+ if(has('ddlt')){Object.assign(c,{'Procedure':'Liver transplant','Donor Type':'Deceased Donor','Weight':'More than 25 kg','Graft Type - For liver':has('split')?'Right':'Whole','BD reconstruction':has('rny')?'Roux-en-y hepaticojejunostomy':'Duct-to-duct','Machine Perfusion Checkbox':mp});}
+ else if(has('ldlt')){Object.assign(c,{'Procedure':'Liver transplant','Donor Type':'Living Donor','Weight':'More than 25 kg','Graft Type - For liver':lat||'Right','BD reconstruction':has('rny')?'Roux-en-y hepaticojejunostomy':'Duct-to-duct'});}
+ else if(has('ddkt')){Object.assign(c,{'Procedure':'Kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Graft Type - For kidney':'Single','Laterality':lat,'Weight':'More than 25 kg'});}
+ else if(has('ldkt')){Object.assign(c,{'Procedure':'Kidney transplant','Donor Type':'Living Donor','Graft Type - For kidney':'Single','Laterality':lat,'Weight':'More than 25 kg'});}
+ else if(has('spk')){Object.assign(c,{'Procedure':'Simultaneous pancreas and kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Laterality':lat,'Weight':'More than 25 kg'});}
+ else if(has('slk')){Object.assign(c,{'Procedure':'Simultaneous liver and kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Laterality':lat,'Weight':'More than 25 kg','Graft Type - For liver':'Whole','BD reconstruction':'Duct-to-duct'});}
+ else if(has('panctx')){Object.assign(c,{'Procedure':'Pancreas transplant','Donor Type':'Deceased Donor','Donation Status':dstat});}
+ else if(has('ldn')||has('dn')||t.includes('donor nephrectomy')){Object.assign(c,{'Procedure':'Living Donor Nephrectomy','Laterality - LDN':lat||'Left'});}
+ else if(has('ldh')||has('dh')){Object.assign(c,{'Procedure':'Living Donor Hepatectomy','Graft Type - For liver':lat||'Right'});}
+ else if(/ bb kidney | kidney bb /.test(t)){c['Procedure']='Kidney Back Bench';}
+ else if(/ bb liver | liver bb /.test(t)){c['Procedure']='Liver Back Bench';}
+ else if(/ bb panc | panc bb /.test(t)){c['Procedure']='Pancreas Back Bench';}
+ else if(has('biliary')){Object.assign(c,{'Procedure':'Biliary','Bile Duct Operation':'Biliary reconstruction'});}
+ else if(has('hepmaj')){Object.assign(c,{'Procedure':'Hepatectomy Major','Hepatectomy Major':'Hemi-hepatectomy'});}
+ else if(has('hepmin')){Object.assign(c,{'Procedure':'Hepatectomy Minor','Hepatectomy Minor':'Partial, or non-anatomic resection'});}
+ else if(has('whip')){Object.assign(c,{'Procedure':'Pancreas, Non-Transplant','Pancreas Operation':'Pancreaticoduodenectomy'});}
+ else if(has('split')&&(has('proc')||dstat)){Object.assign(c,{'Procedure':'Deceased donor procurement, with in situ split liver','Donation Status':dstat||'DBD','Organ(s) Procured':'Liver – in situ split','Machine Perfusion Checkbox':mp,'NRP checkbox':nrp});}
+ else if(has('proc')||has('procurement')||dstat){
+  Object.assign(c,{'Procedure':has('panc')?'Deceased donor procurement, with pancreas':'Deceased donor procurement, without pancreas','Donation Status':dstat||'DBD','Organ(s) Procured':has('kidney')&&has('liver')?'Kidney, Liver – whole':has('kidney')?'Kidney':'Liver – whole','Machine Perfusion Checkbox':mp,'NRP checkbox':nrp});}
+ else{c['Procedure']='Other';c['Other Operation Description']=txt.trim();}
+ if(/ redo | re-do /.test(t))c['Comments']='Re-do';
+ return c;
+}
+document.getElementById('shortIn').addEventListener('input',e=>{
+ const c=parseShort(e.target.value);const pv=document.getElementById('parsePrev');
+ if(!c){pv.style.display='none';return;}
+ fillForm(c);
+ pv.style.display='block';
+ pv.innerHTML='<b>'+c['Procedure']+'</b>'+(pendingBT?' <b>+ back bench</b>':'')+' &mdash; '+
+  ['Surgery Date','Patient Initials/UNOS ID','Patient Age','Donor Type','Donation Status','Laterality','Laterality - LDN','Graft Type - For liver','Technique','Machine Perfusion Checkbox','NRP checkbox','Role']
+  .filter(k=>c[k]).map(k=>c[k]).join(' · ')+' <span style="color:var(--mut)">(adjust below, then Save)</span>';
+});
+document.getElementById('shortIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveCase();}});
+
+/* ---------- queue ---------- */
+let qIdx=0;
+function pendingList(){return DB.filter(c=>c.status==='pending').sort((a,b)=>dParse(a['Surgery Date'])-dParse(b['Surgery Date']));}
+function renderQueue(){
+ const q=pendingList();const box=document.getElementById('queueBox');
+ if(!q.length){box.innerHTML=DB.length?'<div class="card" style="text-align:center"><h3 class="ok">Portal queue empty 🎉</h3><div class="note">Every logged case is marked as entered.</div></div>':'<div class="card" style="text-align:center"><h3>No cases yet</h3><div class="note">First time on this device? Go to <b>All Cases → Restore JSON</b> and pick your backup file to load your existing log.</div></div>';return;}
+ if(qIdx>=q.length)qIdx=q.length-1;if(qIdx<0)qIdx=0;
+ const c=q[qIdx];
+ const fields=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight'];
+ const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:[f]);
+ const all=[...fields,...extra,'Comments'];
+ box.innerHTML=`<div class="pcard">
+  <h3>${CATEGORY[c['Procedure']]||'Other'} &rsaquo; portal entry ${qIdx+1} of ${q.length}</h3>
+  <h2>${c['Procedure']}</h2>
+  ${all.map(k=>{const v=c[k]||'';if(k==='Comments'&&!v)return'';if(k==='Weight'&&!v)return'';
+    return`<div class="pf"><span class="k">${k}</span><span class="v ${v?'':'empty'}">${esc(v)||'&mdash;'}</span></div>`;}).join('')}
+  ${c._raw?`<div class="raw">${esc(c._raw)}</div>`:''}
+  <div class="qnav">
+   <button class="btn sec" onclick="qIdx--;renderQueue()" ${qIdx===0?'disabled':''}>&larr; Prev</button>
+   <button class="btn" onclick="setStatus(${c.id},'entered');toast('Marked entered')">✓ Mark entered</button>
+   <button class="btn sec" onclick="qIdx++;renderQueue()" ${qIdx>=q.length-1?'disabled':''}>Next &rarr;</button>
+  </div>
+  <div class="qnav"><button class="btn sec sm" onclick="editCase(${c.id})">Edit</button>
+  <button class="btn sec sm warn" style="border-color:#a33;color:#a33;background:#fff" onclick="delCase(${c.id})">Delete</button></div>
+ </div>`;
+}
+
+/* ---------- case list ---------- */
+function renderCases(){
+ const q=(document.getElementById('q').value||'').toLowerCase();
+ const st=document.getElementById('fStatus').value;const fp=document.getElementById('fProc').value;
+ const list=DB.filter(c=>(!st||c.status===st)&&(!fp||c['Procedure']===fp)&&
+   (!q||JSON.stringify(c).toLowerCase().includes(q)))
+  .sort((a,b)=>dParse(b['Surgery Date'])-dParse(a['Surgery Date']));
+ document.getElementById('caseList').innerHTML=list.map(c=>`
+  <div class="row" onclick="editCase(${c.id})">
+   <div class="l"><div class="t">${c['Surgery Date']} — ${c['Procedure']}</div>
+   <div class="s">${esc(c['Patient Initials/UNOS ID']||'')} ${c['Patient Age']?'· '+c['Patient Age']:''} · ${c['Role']}${c['Laterality']||c['Laterality - LDN']?' · '+(c['Laterality']||c['Laterality - LDN']):''}</div></div>
+   <span class="chip ${c.status}">${c.status}</span>
+  </div>`).join('')||'<div class="note">No cases match.</div>';
+}
+function buildProcFilter(){
+ const s=document.getElementById('fProc');const seen=[...new Set(DB.map(c=>c['Procedure']))].sort();
+ s.innerHTML='<option value="">all procedures</option>'+seen.map(p=>`<option>${p}</option>`).join('');
+}
+
+/* ---------- progress ---------- */
+function counts(){
+ const P=c=>c['Role']==='Principal';
+ const n=f=>DB.filter(f).length;
+ const liverTx=c=>['Liver transplant','Simultaneous liver and kidney transplant'].includes(c['Procedure']);
+ const kidneyTx=c=>['Kidney transplant','Simultaneous pancreas and kidney transplant','Simultaneous liver and kidney transplant'].includes(c['Procedure']);
+ return{
+  total:{n:n(c=>CATEGORY[c['Procedure']]==='Transplant'&&P(c)),t:50,l:'Total transplants (Principal)'},
+  liver:{n:n(c=>liverTx(c)&&P(c)),t:45,l:'Liver transplants'},
+  kidney:{n:n(c=>kidneyTx(c)&&P(c)),t:40,l:'Kidney transplants'},
+  ddp:{n:n(c=>c['Procedure'].startsWith('Deceased donor procurement')&&P(c)),t:25,l:'Deceased donor procurements'},
+  ldn:{n:n(c=>c['Procedure']==='Living Donor Nephrectomy'),t:12,l:'Living donor nephrectomy (any role)'},
+  pancTx:{n:n(c=>['Pancreas transplant','Simultaneous pancreas and kidney transplant'].includes(c['Procedure'])&&P(c)),t:10,l:'Pancreas transplants'},
+  pancBB:{n:n(c=>c['Procedure']==='Pancreas Back Bench'),t:10,l:'Pancreas back bench'},
+  pancPr:{n:n(c=>c['Procedure']==='Deceased donor procurement, with pancreas'&&P(c)),t:10,l:'Pancreas procurements'},
+  hepMaj:{n:n(c=>['Hepatectomy Major','Living Donor Hepatectomy','Deceased donor procurement, with in situ split liver'].includes(c['Procedure'])&&P(c)),t:15,l:'Hepatectomy major (incl. LDH, in situ split)'},
+  biliary:{n:n(c=>c['Procedure']==='Biliary'&&P(c)),t:15,l:'Biliary procedures'},
+  hb:{n:n(c=>['Hepatectomy Major','Hepatectomy Minor','Biliary','Living Donor Hepatectomy','Deceased donor procurement, with in situ split liver'].includes(c['Procedure'])&&P(c)),t:35,l:'Total HB cases'},
+ };
+}
+function bar(o){const pct=Math.min(100,Math.round(o.n/o.t*100));
+ return`<div class="req"><div class="hd"><span>${o.l}</span><span class="n">${o.n} / ${o.t}${o.n>=o.t?' <span class="ok">✓</span>':''}</span></div>
+ <div class="bar"><div class="${o.n>=o.t?'done':''}" style="width:${pct}%"></div></div></div>`;}
+function renderProg(){
+ const c=counts();const pend=DB.filter(x=>x.status==='pending').length;
+ document.getElementById('progBox').innerHTML=
+  `<div style="font-size:13px;color:var(--mut);margin-bottom:12px">${DB.length} cases logged · <b style="color:var(--amber)">${pend} awaiting portal entry</b></div>`+
+  [c.total,c.liver,c.kidney,c.ddp,c.ldn].map(bar).join('')+
+  `<details><summary>Pancreas track</summary>${[c.pancTx,c.pancBB,c.pancPr].map(bar).join('')}</details>
+   <details><summary>HB / HPB track</summary>${[c.hb,c.hepMaj,c.biliary].map(bar).join('')}</details>`;
+ document.getElementById('progNotes').innerHTML=
+  '<b>TACC counting rules</b> (Fellow Requirements, asts.org): transplant minimums require the <b>Principal</b> role; LDN counts in principal or participant role. SLK counts toward liver + kidney and SPK toward kidney + pancreas here — confirm with your PD how your program credits multi-organ cases. Living donor hepatectomy and in situ split procurements count toward Hepatectomy Major. Cholecystectomies and d2d/RYHJ at transplant do <b>not</b> count as biliary.';
+}
+
+/* ---------- export / import ---------- */
+function dl(name,mime,content){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=name;a.click();}
+function exportCSV(pendOnly){
+ const rows=DB.filter(c=>!pendOnly||c.status==='pending').sort((a,b)=>dParse(a['Surgery Date'])-dParse(b['Surgery Date']));
+ const hdr=[...COLS,'Status'];
+ const csv=[hdr.join(',')].concat(rows.map(c=>hdr.map(k=>{const v=k==='Status'?c.status:(c[k]||'');return'"'+String(v).replace(/"/g,'""')+'"';}).join(','))).join('\n');
+ dl(pendOnly?'pending-cases.csv':'all-cases.csv','text/csv','﻿'+csv);
+}
+function exportJSON(){dl('caselog-backup-'+new Date().toISOString().slice(0,10)+'.json','application/json',JSON.stringify(DB,null,1));try{localStorage.setItem(KEY+'_bk',Date.now());}catch(e){}}
+function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d)){DB=d;persist();refresh();toast('Restored '+d.length+' cases');}}catch(e){toast('Invalid file');}};
+ r.readAsText(f);inp.value='';}
+
+/* ---------- tabs ---------- */
+function tab(t){['log','queue','cases','prog'].forEach(x=>{
+ document.getElementById('tab-'+x).style.display=x===t?'':'none';
+ document.getElementById('nav-'+x).classList.toggle('on',x===t);});
+ if(t==='queue')renderQueue();if(t==='prog')renderProg();if(t==='cases')renderCases();}
+function refresh(){buildProcFilter();renderCases();renderQueue();renderProg();
+ const pend=DB.filter(c=>c.status==='pending').length;
+ const bk=+(localStorage.getItem(KEY+'_bk')||0);const stale=DB.length&&(Date.now()-bk)>14*864e5;
+ document.getElementById('hdrCount').textContent=DB.length+' cases · '+pend+' pending'+(stale?' · ⚠︎ backup':'');}
+
+load();buildProcSelect();resetForm();refresh();
+document.getElementById('tab-cases').style.display='none';
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
