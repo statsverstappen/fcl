@@ -66,6 +66,24 @@ in front of the URL at no cost. No credit card; the Zero Trust free plan covers 
 Re-upload via **Deployments → Create deployment** (drag the folder again) after bumping
 `case-log-v1` → `v2` in `sw.js`. Your case data is never touched by app updates.
 
+## Onboarding other fellows
+
+The app is inherently multi-user-safe: each person's cases live only in their own
+device's browser storage. Nothing is shared between users and nothing touches a server.
+
+1. Add their email to the Access policy: **Zero Trust → Access → Applications →
+   (your app) → Policies → include → Emails** — add each fellow's email
+   (or switch the rule to "Emails ending in @<your-institution>.edu" to cover everyone).
+   The free plan covers 50 users.
+2. Send them the URL. They log in with their email + one-time code, Add to Home Screen.
+3. They bootstrap their history with **All Cases → Import portal CSV**: in the TAC portal
+   they export their surgical log (an .xlsx), open it in Excel, Save As → CSV, and import
+   that file. Rows arrive marked "entered", duplicates are skipped, and re-importing later
+   only adds new rows. From then on they log new cases in the app.
+
+Each fellow should make their own JSON backups. There is no shared dashboard — if the
+program ever wants one, that would need a small server component (by design, it doesn't exist).
+
 ## Notes on what Access does and doesn't change
 
 - Access gates who can *load the page*. Your case data still lives only in the device's

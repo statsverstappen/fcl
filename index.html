@@ -134,6 +134,7 @@ a{color:var(--accent)}
       <button class="btn sec sm" onclick="exportCSV(true)">Export pending (CSV)</button>
       <button class="btn sec sm" onclick="exportJSON()">Backup (JSON)</button>
       <label class="btn sec sm" style="width:auto;display:inline-block">Restore JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+      <label class="btn sec sm" style="width:auto;display:inline-block">Import portal CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)"></label>
     </div>
   </div>
 </section>
@@ -447,6 +448,39 @@ function exportCSV(pendOnly){
  dl(pendOnly?'pending-cases.csv':'all-cases.csv','text/csv','﻿'+csv);
 }
 function exportJSON(){dl('caselog-backup-'+new Date().toISOString().slice(0,10)+'.json','application/json',JSON.stringify(DB,null,1));try{localStorage.setItem(KEY+'_bk',Date.now());}catch(e){}}
+function parseCSVtext(txt){
+ const rows=[];let row=[],cur='',q=false;
+ for(let i=0;i<txt.length;i++){const ch=txt[i];
+  if(q){if(ch==='"'){if(txt[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+  else if(ch==='"')q=true;
+  else if(ch===','){row.push(cur);cur='';}
+  else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&txt[i+1]==='\n')i++;row.push(cur);cur='';if(row.some(x=>x!==''))rows.push(row);row=[];}
+  else cur+=ch;}
+ row.push(cur);if(row.some(x=>x!==''))rows.push(row);
+ return rows;}
+function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{
+  const rows=parseCSVtext(String(r.result).replace(/^\ufeff/,''));
+  if(rows.length<2){toast('No rows found');return;}
+  const hdr=rows[0].map(h=>h.trim());
+  const known=new Set([...COLS,'Status']);
+  if(!hdr.includes('Procedure')||!hdr.includes('Surgery Date')){toast('Not a portal export CSV');return;}
+  const existing=new Set(DB.map(c=>[c['Surgery Date'],c['Patient Initials/UNOS ID'],c['Procedure']].join('|')));
+  let added=0,skipped=0;
+  for(const raw of rows.slice(1)){
+   const c={};COLS.forEach(k=>c[k]='');let st='entered';
+   hdr.forEach((h,i)=>{const v=(raw[i]||'').trim();if(!v)return;
+    if(h==='Status')st=v.toLowerCase()==='pending'?'pending':'entered';
+    else if(known.has(h))c[h]=v;});
+   if(!c['Procedure']||!c['Surgery Date']){skipped++;continue;}
+   const key=[c['Surgery Date'],c['Patient Initials/UNOS ID'],c['Procedure']].join('|');
+   if(existing.has(key)){skipped++;continue;}
+   if(!c['NMP']&&c['Machine Perfusion Checkbox'])c['NMP']='NMP';
+   if(!c['NRP']&&!c['TA-NRP']&&c['NRP checkbox'])c['NRP']='NRP';
+   c.id=nextId();c.status=st;DB.push(c);existing.add(key);added++;}
+  persist();refresh();toast('Imported '+added+' cases'+(skipped?' ('+skipped+' skipped)':''));
+ }catch(e){toast('Could not read CSV');}};
+ r.readAsText(f);inp.value='';}
 function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d)){DB=d;persist();refresh();toast('Restored '+d.length+' cases');}}catch(e){toast('Invalid file');}};
  r.readAsText(f);inp.value='';}
