@@ -35,9 +35,6 @@ textarea{resize:vertical;min-height:44px}
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
 .chip.pending{background:var(--amber-lt);color:var(--amber)}
 .chip.entered{background:#14352a;color:var(--good)}
-#shortIn{font-size:17px;padding:12px;border:2px solid var(--navy);border-radius:10px;background:var(--card2)}
-#parseHint{font-size:12px;color:var(--mut);margin-top:6px;line-height:1.5}
-#parsePrev{margin-top:8px;font-size:13px;background:rgba(122,165,230,.12);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .row:hover{background:var(--card2)}
 .row .l{min-width:0}.row .t{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -67,8 +64,8 @@ details{margin-top:6px}summary{cursor:pointer;font-weight:600;color:var(--accent
 .ok{color:var(--good);font-weight:700}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243a5e;color:#fff;border:1px solid var(--line);padding:10px 18px;border-radius:9px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
 .toast.show{opacity:1}
-.cbrow{display:flex;gap:14px;flex-wrap:wrap;padding:6px 0}
-.cbrow label{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);font-weight:400;margin:0}
+.cbrow{display:flex;gap:10px;flex-wrap:wrap;padding:6px 0}
+.cbrow label{display:flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap;color:var(--ink);font-weight:400;margin:0}
 .cbrow input{width:auto;accent-color:var(--navy)}
 a{color:var(--accent)}
 </style>
@@ -77,7 +74,7 @@ a{color:var(--accent)}
 <header>
   <img src="icon-192.png" alt="" style="width:30px;height:30px;border-radius:7px"><h1>Fellowship Case Logger</h1>
   <span class="count-pill" id="hdrCount"></span>
-  <span class="sub">shorthand in &rarr; portal fields out</span>
+  <span class="sub">portal-ready case log</span>
 </header>
 <nav>
   <button id="nav-log" class="on" onclick="tab('log')">+ Log</button>
@@ -89,12 +86,6 @@ a{color:var(--accent)}
 
 <!-- LOG -->
 <section id="tab-log">
-  <div class="card">
-    <label style="margin-top:0">Quick entry — type it like your Word doc</label>
-    <input id="shortIn" placeholder="e.g.  ddkt ANDT292 54M left dbd +bt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <div id="parsePrev"></div>
-    <div id="parseHint"><b>Shorthand:</b> ddlt · ldlt · ddkt · ldkt · spk · slk · panctx · dbd/dcd (procurement) · ldn · ldh · bb liver / bb kidney · biliary · hepmaj / hepmin · whip &nbsp;|&nbsp; <b>modifiers:</b> 54M · left/right · robot/lap · nmp · nrp · tanrp · scs · d2d/rny · split · redo · part (participant) · +bt (adds back bench) · 7/14 (date, else today)</div>
-  </div>
   <div class="card">
     <div class="grid">
       <div><label>Surgery Date</label><input type="date" id="f_date"></div>
@@ -109,6 +100,7 @@ a{color:var(--accent)}
     <div style="margin-top:12px;display:flex;gap:8px">
       <button class="btn" onclick="saveCase()">Save case</button>
       <button class="btn sec" onclick="resetForm()">Clear</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);font-weight:600;margin:0"><input type="checkbox" id="f_addbt" style="width:auto">+ Back Bench</label>
       <span id="editBadge" style="display:none;align-self:center;font-size:13px;color:var(--amber);font-weight:600">editing existing case</span>
     </div>
   </div>
@@ -152,7 +144,7 @@ a{color:var(--accent)}
 'use strict';
 const SEED=[];
 const KEY='fellowship_caselog_v1';
-const COLS=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight','Procedure','Donor Type','Donation Status','Graft Type - For kidney','Graft Type - For liver','Organ(s) Procured','Technique','BD reconstruction','Machine Perfusion Checkbox','NRP checkbox','NMP','NRP','TA-NRP','Laterality','Laterality - LDN','Hepatectomy Major','Hepatectomy Minor','Pancreas Operation','Bile Duct Operation','Other Operation Description','Comments'];
+const COLS=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight','Procedure','Donor Type','Donation Status','Graft Type - For kidney','Graft Type - For liver','Organ(s) Procured','Technique','BD reconstruction','Machine Perfusion Checkbox','NRP checkbox','NMP','NRP','A-NRP','Laterality','Laterality - LDN','Hepatectomy Major','Hepatectomy Minor','Pancreas Operation','Bile Duct Operation','Other Operation Description','Comments'];
 
 const CATEGORY={
  'Intestine transplant':'Transplant','Kidney transplant':'Transplant','Liver transplant':'Transplant',
@@ -231,7 +223,7 @@ function renderCond(vals){
       OPTS[f].map(o=>`<option ${vals[f]===o?'selected':''}>${o}</option>`).join('')+`</select>
       <div class="cbrow"><label><input type="checkbox" id="f_NMP" ${vals['NMP']?'checked':''}>NMP</label>
       <label><input type="checkbox" id="f_NRP" ${vals['NRP']?'checked':''}>NRP</label>
-      <label><input type="checkbox" id="f_TA_NRP" ${vals['TA-NRP']?'checked':''}>TA-NRP</label></div></div>`;
+      <label><input type="checkbox" id="f_A_NRP" ${vals['A-NRP']?'checked':''}>A-NRP</label></div></div>`;
   }else if(f==='Other Operation Description'){
    h+=`</div><label>Other Operation Description</label><input id="f_${cssId(f)}" value="${esc(vals[f]||'')}"><div class="grid">`;
   }else{
@@ -257,7 +249,7 @@ function fillForm(c){
  renderCond(c);
 }
 function resetForm(){editId=null;document.getElementById('editBadge').style.display='none';
- document.getElementById('shortIn').value='';document.getElementById('parsePrev').style.display='none';
+ const bt=document.getElementById('f_addbt');if(bt)bt.checked=false;
  fillForm({'Procedure':'Liver transplant','Weight':'More than 25 kg'});}
 function collectForm(){
  const c={};COLS.forEach(k=>c[k]='');
@@ -274,9 +266,9 @@ function collectForm(){
  });
  if((FIELDMAP[c['Procedure']]||[]).includes('Technique')){
   const g=id=>{const e=document.getElementById(id);return e&&e.checked;};
-  c['NMP']=g('f_NMP')?'NMP':'';c['NRP']=g('f_NRP')?'NRP':'';c['TA-NRP']=g('f_TA_NRP')?'TA-NRP':'';
+  c['NMP']=g('f_NMP')?'NMP':'';c['NRP']=g('f_NRP')?'NRP':'';c['A-NRP']=g('f_A_NRP')?'A-NRP':'';
   if(c['NMP']&&!c['Machine Perfusion Checkbox'])c['Machine Perfusion Checkbox']='Machine Perfusion';
-  if((c['NRP']||c['TA-NRP'])&&!c['NRP checkbox'])c['NRP checkbox']='NRP';
+  if((c['NRP']||c['A-NRP'])&&!c['NRP checkbox'])c['NRP checkbox']='NRP';
  }
  return c;
 }
@@ -285,79 +277,19 @@ function saveCase(){
  if(!c['Surgery Date']){toast('Set a surgery date');return;}
  if(editId!=null){const i=DB.findIndex(x=>x.id===editId);c.id=editId;c.status=DB[i].status;if(DB[i]._raw)c._raw=DB[i]._raw;DB[i]=c;toast('Case updated');}
  else{c.id=nextId();c.status='pending';DB.push(c);
-  if(pendingBT){const b={};COLS.forEach(k=>b[k]='');
+  const _bt=document.getElementById('f_addbt');
+  if(_bt&&_bt.checked){const b={};COLS.forEach(k=>b[k]='');
    b['Surgery Date']=c['Surgery Date'];b['Patient Initials/UNOS ID']=c['Patient Initials/UNOS ID'];
    b['Patient Age']=c['Patient Age'];b['Role']='Principal';
    b['Procedure']=/kidney/i.test(c['Procedure'])?'Kidney Back Bench':'Liver Back Bench';
    b.id=nextId();b.status='pending';DB.push(b);toast('Saved + back bench added');}
   else toast('Case saved');}
- persist();pendingBT=false;resetForm();refresh();
+ persist();resetForm();refresh();
 }
 function editCase(id){const c=DB.find(x=>x.id===id);if(!c)return;editId=id;
  document.getElementById('editBadge').style.display='inline';fillForm(c);tab('log');window.scrollTo(0,0);}
 function delCase(id){if(!confirm('Delete this case?'))return;DB=DB.filter(x=>x.id!==id);persist();refresh();}
 function setStatus(id,s){const c=DB.find(x=>x.id===id);if(c){c.status=s;persist();refresh();}}
-
-/* ---------- shorthand parser ---------- */
-let pendingBT=false;
-function parseShort(txt){
- const t=' '+txt.toLowerCase().trim()+' ';if(!txt.trim())return null;
- const c={'Procedure':'','Role':'Principal','Technique':'Open'};
- const today=new Date();
- const dm=t.match(/ (\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))? /);
- let y=today.getFullYear();
- if(dm){if(dm[3])y=dm[3].length===2?2000+ +dm[3]:+dm[3];
-  else{const cand=new Date(y,+dm[1]-1,+dm[2]);if(cand>today)y--;}
-  c['Surgery Date']=`${+dm[1]}/${+dm[2]}/${y}`;}
- else c['Surgery Date']=`${today.getMonth()+1}/${today.getDate()}/${y}`;
- const um=txt.match(/\b([A-Za-z]{2}[A-Za-z0-9]{3,6}\d)\b/)||txt.match(/\b(A[MN][A-Z0-9]{2,6})\b/i);
- if(um)c['Patient Initials/UNOS ID']=um[1].toUpperCase();
- const am=t.match(/ (\d{1,3})\s*([mf]) /);if(am)c['Patient Age']=am[1];
- const has=w=>t.includes(' '+w+' ')||t.includes(' '+w+',');
- const lat=has('left')?'Left':has('right')?'Right':'';
- if(/robot/.test(t))c['Technique']='Robotic';else if(has('lap'))c['Technique']='Laparoscopic';
- const mp=/ nmp | organox | mp /.test(t)?'Machine Perfusion':'';
- const nrp=/ nrp /.test(t)?'NRP':'';
- const dstat=/ dcd /.test(t)?'DCD':(/ dbd /.test(t)?'DBD':'');
- if(/ ta-?nrp /.test(t))c['TA-NRP']='TA-NRP';
- else if(/ nrp /.test(t))c['NRP']='NRP';
- if(/ nmp | organox /.test(t))c['NMP']='NMP';
- if(has('part')||has('participant'))c['Role']='Participant';
- pendingBT=/ ?\+ ?bt | \+ ?backtable |backtable|back table/.test(t)&&!/^\s*bb /.test(t.trim());
-
- if(has('ddlt')){Object.assign(c,{'Procedure':'Liver transplant','Donor Type':'Deceased Donor','Weight':'More than 25 kg','Graft Type - For liver':has('split')?'Right':'Whole','BD reconstruction':has('rny')?'Roux-en-y hepaticojejunostomy':'Duct-to-duct','Machine Perfusion Checkbox':mp});}
- else if(has('ldlt')){Object.assign(c,{'Procedure':'Liver transplant','Donor Type':'Living Donor','Weight':'More than 25 kg','Graft Type - For liver':lat||'Right','BD reconstruction':has('rny')?'Roux-en-y hepaticojejunostomy':'Duct-to-duct'});}
- else if(has('ddkt')){Object.assign(c,{'Procedure':'Kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Graft Type - For kidney':'Single','Laterality':lat,'Weight':'More than 25 kg'});}
- else if(has('ldkt')){Object.assign(c,{'Procedure':'Kidney transplant','Donor Type':'Living Donor','Graft Type - For kidney':'Single','Laterality':lat,'Weight':'More than 25 kg'});}
- else if(has('spk')){Object.assign(c,{'Procedure':'Simultaneous pancreas and kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Laterality':lat,'Weight':'More than 25 kg'});}
- else if(has('slk')){Object.assign(c,{'Procedure':'Simultaneous liver and kidney transplant','Donor Type':'Deceased Donor','Donation Status':dstat,'Laterality':lat,'Weight':'More than 25 kg','Graft Type - For liver':'Whole','BD reconstruction':'Duct-to-duct'});}
- else if(has('panctx')){Object.assign(c,{'Procedure':'Pancreas transplant','Donor Type':'Deceased Donor','Donation Status':dstat});}
- else if(has('ldn')||has('dn')||t.includes('donor nephrectomy')){Object.assign(c,{'Procedure':'Living Donor Nephrectomy','Laterality - LDN':lat||'Left'});}
- else if(has('ldh')||has('dh')){Object.assign(c,{'Procedure':'Living Donor Hepatectomy','Graft Type - For liver':lat||'Right'});}
- else if(/ bb kidney | kidney bb /.test(t)){c['Procedure']='Kidney Back Bench';}
- else if(/ bb liver | liver bb /.test(t)){c['Procedure']='Liver Back Bench';}
- else if(/ bb panc | panc bb /.test(t)){c['Procedure']='Pancreas Back Bench';}
- else if(has('biliary')){Object.assign(c,{'Procedure':'Biliary','Bile Duct Operation':'Biliary reconstruction'});}
- else if(has('hepmaj')){Object.assign(c,{'Procedure':'Hepatectomy Major','Hepatectomy Major':'Hemi-hepatectomy'});}
- else if(has('hepmin')){Object.assign(c,{'Procedure':'Hepatectomy Minor','Hepatectomy Minor':'Partial, or non-anatomic resection'});}
- else if(has('whip')){Object.assign(c,{'Procedure':'Pancreas, Non-Transplant','Pancreas Operation':'Pancreaticoduodenectomy'});}
- else if(has('split')&&(has('proc')||dstat)){Object.assign(c,{'Procedure':'Deceased donor procurement, with in situ split liver','Donation Status':dstat||'DBD','Organ(s) Procured':'Liver – in situ split','Machine Perfusion Checkbox':mp,'NRP checkbox':nrp});}
- else if(has('proc')||has('procurement')||dstat){
-  Object.assign(c,{'Procedure':has('panc')?'Deceased donor procurement, with pancreas':'Deceased donor procurement, without pancreas','Donation Status':dstat||'DBD','Organ(s) Procured':has('kidney')&&has('liver')?'Kidney, Liver – whole':has('kidney')?'Kidney':'Liver – whole','Machine Perfusion Checkbox':mp,'NRP checkbox':nrp});}
- else{c['Procedure']='Other';c['Other Operation Description']=txt.trim();}
- if(/ redo | re-do /.test(t))c['Comments']='Re-do';
- return c;
-}
-document.getElementById('shortIn').addEventListener('input',e=>{
- const c=parseShort(e.target.value);const pv=document.getElementById('parsePrev');
- if(!c){pv.style.display='none';return;}
- fillForm(c);
- pv.style.display='block';
- pv.innerHTML='<b>'+c['Procedure']+'</b>'+(pendingBT?' <b>+ back bench</b>':'')+' &mdash; '+
-  ['Surgery Date','Patient Initials/UNOS ID','Patient Age','Donor Type','Donation Status','Laterality','Laterality - LDN','Graft Type - For liver','Technique','Machine Perfusion Checkbox','NRP checkbox','Role']
-  .filter(k=>c[k]).map(k=>c[k]).join(' · ')+' <span style="color:var(--mut)">(adjust below, then Save)</span>';
-});
-document.getElementById('shortIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveCase();}});
 
 /* ---------- queue ---------- */
 let qIdx=0;
@@ -368,7 +300,7 @@ function renderQueue(){
  if(qIdx>=q.length)qIdx=q.length-1;if(qIdx<0)qIdx=0;
  const c=q[qIdx];
  const fields=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight'];
- const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:f==='Technique'?['Technique','NMP','NRP','TA-NRP']:[f]);
+ const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:f==='Technique'?['Technique','NMP','NRP','A-NRP']:[f]);
  const all=[...fields,...extra,'Comments'];
  box.innerHTML=`<div class="pcard">
   <h3>${CATEGORY[c['Procedure']]||'Other'} &rsaquo; portal entry ${qIdx+1} of ${q.length}</h3>
@@ -476,7 +408,7 @@ function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader
    const key=[c['Surgery Date'],c['Patient Initials/UNOS ID'],c['Procedure']].join('|');
    if(existing.has(key)){skipped++;continue;}
    if(!c['NMP']&&c['Machine Perfusion Checkbox'])c['NMP']='NMP';
-   if(!c['NRP']&&!c['TA-NRP']&&c['NRP checkbox'])c['NRP']='NRP';
+   if(!c['NRP']&&!c['A-NRP']&&c['NRP checkbox'])c['NRP']='NRP';
    c.id=nextId();c.status=st;DB.push(c);existing.add(key);added++;}
   persist();refresh();toast('Imported '+added+' cases'+(skipped?' ('+skipped+' skipped)':''));
  }catch(e){toast('Could not read CSV');}};
