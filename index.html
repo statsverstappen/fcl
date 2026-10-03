@@ -173,15 +173,15 @@ const ORGANS=['Liver – whole','Liver – in situ split','Kidney','Intestine','
 
 // which extra fields each procedure shows (in portal-entry order)
 const FIELDMAP={
- 'Liver transplant':['Donor Type','Graft Type - For liver','BD reconstruction','Technique'],
- 'Kidney transplant':['Donor Type','Donation Status','Graft Type - For kidney','Laterality','Technique'],
- 'Simultaneous liver and kidney transplant':['Donor Type','Donation Status','Graft Type - For liver','BD reconstruction','Laterality','Technique'],
- 'Simultaneous pancreas and kidney transplant':['Donor Type','Donation Status','Laterality','Technique'],
- 'Pancreas transplant':['Donor Type','Donation Status','Technique'],
- 'Intestine transplant':['Donor Type','Donation Status','Technique'],
- 'Deceased donor procurement, without pancreas':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
- 'Deceased donor procurement, with pancreas':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
- 'Deceased donor procurement, with in situ split liver':['ORGANS','Donation Status','Machine Perfusion Checkbox','NRP checkbox'],
+ 'Liver transplant':['Donor Type','Graft Type - For liver','BD reconstruction','Technique','PERF'],
+ 'Kidney transplant':['Donor Type','Donation Status','Graft Type - For kidney','Laterality','Technique','PERF'],
+ 'Simultaneous liver and kidney transplant':['Donor Type','Donation Status','Graft Type - For liver','BD reconstruction','Laterality','Technique','PERF'],
+ 'Simultaneous pancreas and kidney transplant':['Donor Type','Donation Status','Laterality','Technique','PERF'],
+ 'Pancreas transplant':['Donor Type','Donation Status','Technique','PERF'],
+ 'Intestine transplant':['Donor Type','Donation Status','Technique','PERF'],
+ 'Deceased donor procurement, without pancreas':['ORGANS','Donation Status','PERF'],
+ 'Deceased donor procurement, with pancreas':['ORGANS','Donation Status','PERF'],
+ 'Deceased donor procurement, with in situ split liver':['ORGANS','Donation Status','PERF'],
  'Living Donor Hepatectomy':['Graft Type - For liver','Technique'],
  'Living Donor Nephrectomy':['Laterality - LDN','Technique'],
  'Liver Back Bench':[],'Kidney Back Bench':[],'Pancreas Back Bench':[],'Intestine Back Bench':[],
@@ -193,7 +193,15 @@ const FIELDMAP={
 
 let DB=[], editId=null;
 function load(){try{const s=localStorage.getItem(KEY); DB=s?JSON.parse(s):structuredClone(SEED);}catch(e){DB=structuredClone(SEED);} if(!localStorage.getItem(KEY))persist();}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB));return true;}
+ catch(e){alert('NOT SAVED: this device\'s storage is full or blocked. Export a backup now so nothing is lost.');return false;}}
+function todayIso(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+// Back bench entries a transplant adds when "+ Back Bench" is ticked.
+const BACKBENCH={
+ 'Liver transplant':['Liver Back Bench'],'Kidney transplant':['Kidney Back Bench'],
+ 'Pancreas transplant':['Pancreas Back Bench'],'Intestine transplant':['Intestine Back Bench'],
+ 'Simultaneous liver and kidney transplant':['Liver Back Bench','Kidney Back Bench'],
+ 'Simultaneous pancreas and kidney transplant':['Pancreas Back Bench','Kidney Back Bench']};
 function nextId(){return DB.reduce((m,c)=>Math.max(m,c.id||0),0)+1;}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 function dParse(s){const m=(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?new Date(+m[3],+m[1]-1,+m[2]):new Date(0);}
@@ -218,10 +226,8 @@ function renderCond(vals){
   }else if(f==='Machine Perfusion Checkbox'||f==='NRP checkbox'){
    const lab=f==='NRP checkbox'?'NRP':'Machine Perfusion';
    h+=`<div class="cbrow" style="align-self:end"><label><input type="checkbox" id="f_${cssId(f)}" ${vals[f]?'checked':''}>${lab}</label></div>`;
-  }else if(f==='Technique'){
-   h+=`<div><label>Technique</label><select id="f_Technique"><option value=""></option>`+
-      OPTS[f].map(o=>`<option ${vals[f]===o?'selected':''}>${o}</option>`).join('')+`</select>
-      <div class="cbrow"><label><input type="checkbox" id="f_NMP" ${vals['NMP']?'checked':''}>NMP</label>
+  }else if(f==='PERF'){
+   h+=`<div><label>Perfusion</label><div class="cbrow" style="padding-top:8px"><label><input type="checkbox" id="f_NMP" ${vals['NMP']?'checked':''}>NMP</label>
       <label><input type="checkbox" id="f_NRP" ${vals['NRP']?'checked':''}>NRP</label>
       <label><input type="checkbox" id="f_A_NRP" ${vals['A-NRP']?'checked':''}>A-NRP</label></div></div>`;
   }else if(f==='Other Operation Description'){
@@ -239,7 +245,7 @@ function getVal(f){const el=document.getElementById('f_'+cssId(f));if(!el)return
  if(el.type==='checkbox')return el.checked?(f==='NRP checkbox'?'NRP':'Machine Perfusion'):'';return el.value.trim();}
 
 function fillForm(c){
- document.getElementById('f_date').value=us2iso(c['Surgery Date'])||new Date().toISOString().slice(0,10);
+ document.getElementById('f_date').value=us2iso(c['Surgery Date'])||todayIso();
  document.getElementById('f_unos').value=c['Patient Initials/UNOS ID']||'';
  document.getElementById('f_age').value=c['Patient Age']||'';
  document.getElementById('f_role').value=c['Role']||'Principal';
@@ -264,7 +270,7 @@ function collectForm(){
   if(f==='ORGANS'){c['Organ(s) Procured']=[...document.querySelectorAll('.org:checked')].map(x=>x.value).join(', ');}
   else c[f]=getVal(f);
  });
- if((FIELDMAP[c['Procedure']]||[]).includes('Technique')){
+ if((FIELDMAP[c['Procedure']]||[]).includes('PERF')){
   const g=id=>{const e=document.getElementById(id);return e&&e.checked;};
   c['NMP']=g('f_NMP')?'NMP':'';c['NRP']=g('f_NRP')?'NRP':'';c['A-NRP']=g('f_A_NRP')?'A-NRP':'';
   if(c['NMP']&&!c['Machine Perfusion Checkbox'])c['Machine Perfusion Checkbox']='Machine Perfusion';
@@ -275,16 +281,17 @@ function collectForm(){
 function saveCase(){
  const c=collectForm();
  if(!c['Surgery Date']){toast('Set a surgery date');return;}
- if(editId!=null){const i=DB.findIndex(x=>x.id===editId);c.id=editId;c.status=DB[i].status;if(DB[i]._raw)c._raw=DB[i]._raw;DB[i]=c;toast('Case updated');}
- else{c.id=nextId();c.status='pending';DB.push(c);
+ let msg;
+ if(editId!=null){const i=DB.findIndex(x=>x.id===editId);c.id=editId;c.status=DB[i].status;if(DB[i]._raw)c._raw=DB[i]._raw;DB[i]=c;msg='Case updated';}
+ else{c.id=nextId();c.status='pending';DB.push(c);msg='Case saved';
   const _bt=document.getElementById('f_addbt');
-  if(_bt&&_bt.checked){const b={};COLS.forEach(k=>b[k]='');
-   b['Surgery Date']=c['Surgery Date'];b['Patient Initials/UNOS ID']=c['Patient Initials/UNOS ID'];
-   b['Patient Age']=c['Patient Age'];b['Role']='Principal';
-   b['Procedure']=/kidney/i.test(c['Procedure'])?'Kidney Back Bench':'Liver Back Bench';
-   b.id=nextId();b.status='pending';DB.push(b);toast('Saved + back bench added');}
-  else toast('Case saved');}
- persist();resetForm();refresh();
+  if(_bt&&_bt.checked){const bbs=BACKBENCH[c['Procedure']]||[];
+   bbs.forEach(p=>{const b={};COLS.forEach(k=>b[k]='');
+    b['Surgery Date']=c['Surgery Date'];b['Patient Initials/UNOS ID']=c['Patient Initials/UNOS ID'];
+    b['Patient Age']=c['Patient Age'];b['Role']='Principal';b['Procedure']=p;
+    b.id=nextId();b.status='pending';DB.push(b);});
+   msg=bbs.length?'Saved + '+bbs.join(' + '):'Case saved (no back bench for this procedure)';}}
+ if(persist())toast(msg);resetForm();refresh();
 }
 function editCase(id){const c=DB.find(x=>x.id===id);if(!c)return;editId=id;
  document.getElementById('editBadge').style.display='inline';fillForm(c);tab('log');window.scrollTo(0,0);}
@@ -300,7 +307,8 @@ function renderQueue(){
  if(qIdx>=q.length)qIdx=q.length-1;if(qIdx<0)qIdx=0;
  const c=q[qIdx];
  const fields=['Surgery Date','Patient Initials/UNOS ID','Patient Age','Role','Weight'];
- const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:f==='Technique'?['Technique','NMP','NRP','A-NRP']:[f]);
+ const extra=(FIELDMAP[c['Procedure']]||[]).flatMap(f=>f==='ORGANS'?['Organ(s) Procured']:f==='PERF'?['NMP','NRP','A-NRP']:[f]);
+ if(c['Procedure'].startsWith('Deceased donor procurement'))extra.push('Machine Perfusion Checkbox','NRP checkbox');
  const all=[...fields,...extra,'Comments'];
  box.innerHTML=`<div class="pcard">
   <h3>${CATEGORY[c['Procedure']]||'Other'} &rsaquo; portal entry ${qIdx+1} of ${q.length}</h3>
@@ -414,7 +422,14 @@ function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader
  }catch(e){toast('Could not read CSV');}};
  r.readAsText(f);inp.value='';}
 function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
- r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d)){DB=d;persist();refresh();toast('Restored '+d.length+' cases');}}catch(e){toast('Invalid file');}};
+ r.onload=()=>{let d;try{d=JSON.parse(r.result);}catch(e){toast('Invalid file');return;}
+  if(!Array.isArray(d)){toast('Invalid file: not a case backup');return;}
+  const bad=d.filter(c=>!c||typeof c!=='object'||typeof c['Procedure']!=='string'||!c['Surgery Date']).length;
+  if(bad){alert('Not restored: '+bad+' of '+d.length+' records are missing a procedure or surgery date.');return;}
+  if(!confirm('Replace the '+DB.length+' cases on this device with the '+d.length+' cases in this backup? '+
+    'The current cases are kept as a fallback copy on this device.'))return;
+  try{localStorage.setItem(KEY+'_prev',JSON.stringify(DB));}catch(e){}
+  DB=d;if(persist())toast('Restored '+d.length+' cases');refresh();};
  r.readAsText(f);inp.value='';}
 
 /* ---------- tabs ---------- */
